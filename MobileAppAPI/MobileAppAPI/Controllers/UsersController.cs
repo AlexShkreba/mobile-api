@@ -37,7 +37,7 @@ namespace MobileAppAPI.Controllers
             return Ok(user);
         }
 
-        [HttpDelete("delete")]
+        [HttpDelete("delete/{login}")]
         public async Task<ActionResult<Users>> DeleteUsers(string login)
         {
             var user = await _context.users.FirstOrDefaultAsync(x => x.login == login);

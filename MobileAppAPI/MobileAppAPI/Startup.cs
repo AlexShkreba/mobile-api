@@ -4,17 +4,23 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MobileAppAPI.Config;
 using MobileAppAPI.Models;
+using System;
 
 namespace MobileAppAPI
 {
     public class Startup
     {
         public IConfiguration Configuration { get; }
+        public LaunchSettings launchSettings { get; }
+        private IWebHostEnvironment Env { get; }
 
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IWebHostEnvironment environment )
         {
             Configuration = configuration;
+            Env = environment;
+            launchSettings = configuration.GetSection("LaunchSettings").Get<LaunchSettings>();
         }
 
         public void ConfigureServices(IServiceCollection services)
@@ -25,8 +31,21 @@ namespace MobileAppAPI
             services.AddControllers();
             services.AddMvc();
 
-            string con = Configuration["ConnectionString"];
-            services.AddDbContext<Context>(options => options.UseSqlServer(con));
+            services.AddDbContext<Context>(options => {
+                var connectionString = Configuration.GetConnectionString("Default");
+                switch (launchSettings.Mode)
+                {
+                    case LaunchSettings.AppMode.Dev:
+                        options.UseSqlServer(connectionString);
+                        break;
+                    case LaunchSettings.AppMode.Tests:
+                        options.UseInMemoryDatabase("MobileAppDB");
+                        break;
+                    default:
+                        throw new NotImplementedException();
+
+                }
+            });
             services.AddControllers();
         }
 

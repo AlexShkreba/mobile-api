@@ -27,7 +27,7 @@ namespace MobileAppAPI.Controllers
                 return BadRequest();
 
             var tasks_by_categories_list = await _context.tasks_by_categories.Where(x => x.id_user == user.id && x.id_category == category.id).ToListAsync();
-            int active = 0; int passive = 0;
+            int active = 0, passive = 0;
 
             foreach (var i in tasks_by_categories_list)
             {
