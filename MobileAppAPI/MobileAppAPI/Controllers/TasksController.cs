@@ -88,7 +88,8 @@ namespace MobileAppAPI.Controllers
                 var tmp = await _context.categories.FirstOrDefaultAsync(x => x.id == i.id_category);
                 if (tmp.type == "Users")
                 {
-                    result = tmp.name; break;
+                    result = tmp.name;
+                    break;
                 }
             }
             return Ok(new { category = result });
@@ -106,7 +107,9 @@ namespace MobileAppAPI.Controllers
             _context.tasks.Add(task);
             await _context.SaveChangesAsync();
             var tmp_task = await _context.tasks.FirstOrDefaultAsync(x => x.name == task.name);
+
             var all = await _context.categories.FirstOrDefaultAsync(x => x.name == "All Tasks");
+
             var tmp_tbc_all = await _context.tasks_by_categories.FirstOrDefaultAsync(x => x.id_user == user.id && x.id_category == all.id && x.id_task == null);
             if (tmp_tbc_all == null)
             {
@@ -170,38 +173,32 @@ namespace MobileAppAPI.Controllers
         [HttpDelete("delete/{login}/{task}")]
         public async Task<ActionResult>delete(string login, string task)
         {
-            if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(task))
+            var user = await _context.users.FirstOrDefaultAsync(x => x.login == login);
+            var tasks = await _context.tasks.FirstOrDefaultAsync(x => x.name == task);
+            if (user == null || tasks == null)
             {
                 return BadRequest();
             }
             else
             {
-                var user = await _context.users.FirstOrDefaultAsync(x => x.login == login);
-                var tasks = await _context.tasks.FirstOrDefaultAsync(x => x.name == task);
-                if (user == null || tasks == null)
+                var tmp = await _context.tasks_by_categories.Where(x => x.id_user == user.id && x.id_task == tasks.id).ToListAsync();
+                int cat_id = 0;
+                foreach (var i in tmp)
                 {
-                    return BadRequest();
-                }
-                else
-                {
-                    var tmp = await _context.tasks_by_categories.Where(x => x.id_user == user.id && x.id_task == tasks.id).ToListAsync();
-                    int cat_id = 0;
-                    foreach (var i in tmp)
-                    {
-                        cat_id = i.id_category;
-                        _context.tasks_by_categories.Remove(i);
-                        await _context.SaveChangesAsync();
-                        if (!_context.tasks_by_categories.Any(x => x.id_user == user.id && x.id_category == cat_id))
-                        {
-                            _context.tasks_by_categories.Add(new Tasks_By_Categories { id_user = user.id, id_category = cat_id, id_task = null });
-                            await _context.SaveChangesAsync();
-                        }
-                    }
-                    _context.tasks.Remove(tasks);
+                    cat_id = i.id_category;
+                    _context.tasks_by_categories.Remove(i);
                     await _context.SaveChangesAsync();
-                    return Ok();
+                    if (!_context.tasks_by_categories.Any(x => x.id_user == user.id && x.id_category == cat_id))
+                    {
+                        _context.tasks_by_categories.Add(new Tasks_By_Categories { id_user = user.id, id_category = cat_id, id_task = null });
+                        await _context.SaveChangesAsync();
+                    }
                 }
+                _context.tasks.Remove(tasks);
+                await _context.SaveChangesAsync();
+                return Ok();
             }
+            
         }
 
         [HttpPut("put/{login}/{category_name}")]
@@ -217,7 +214,7 @@ namespace MobileAppAPI.Controllers
             foreach (var i in tasks)
             {
                 var tmp = await _context.categories.FirstOrDefaultAsync(x => x.id == i.id_category);
-                if (tmp.type == "Users")
+                if (tmp.type == "Users" && tmp.name != "All Tasks" && tmp.name != "High Priorities" && tmp.name != "In Schedule")
                 {
                     int ID = i.id_category;
                     i.id_category = category.id;

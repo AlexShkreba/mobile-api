@@ -21,8 +21,11 @@ namespace MobileAppAPI.Controllers
         [HttpPost("post")]
         public async Task<ActionResult> post(Users user)
         {
-            if ((user == null) || (_context.users.Any(x => x.login == user.login)))
+            if (user.login == null)
             {
+                return BadRequest();
+            }
+            if(_context.users.Any(x => x.login == user.login)){
                 return BadRequest();
             }
             _context.users.Add(user);

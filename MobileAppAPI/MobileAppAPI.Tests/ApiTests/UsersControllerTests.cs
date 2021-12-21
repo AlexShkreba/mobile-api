@@ -16,27 +16,32 @@ namespace MobileAppAPI.Tests.ApiTests
         [SetUp]
         public async Task Setup()
         {
-            var reqUser = JsonContent.Create(new Users
-            {
-                login = "login",
-                password = "password"
-            });
-            await Client.PostAsync("/api/Users/post", reqUser);
-        }
-
-        #region Create user
-        [Test]
-        public async Task CreateUserAlredyExists()
-        {
-            Users user = new Users()
+            var User = new Users
             {
                 login = "login",
                 password = "password"
             };
-            var reqUser = JsonContent.Create(user);
-            var result = await Client.PostAsync("/api/Users/post", reqUser);
-            Assert.AreEqual(result.StatusCode, HttpStatusCode.BadRequest);
+            var reqUser = JsonContent.Create(User);
+            await Client.PostAsync("/api/Users/post", reqUser);
+            Categories allTasks = new Categories
+            {
+                name = "All Tasks"
+            };
+            Categories highPriorities = new Categories
+            {
+                name = "High Priorities"
+            };
+            Categories inSchedule = new Categories
+            {
+                name = "In Schedule"
+            };;
+            await Client.GetAsync(string.Format("/api/categories/create/{0}/{1}", User.login, allTasks.name));
+            await Client.GetAsync(string.Format("/api/categories/create/{0}/{1}", User.login, highPriorities.name));
+            await Client.GetAsync(string.Format("/api/categories/create/{0}/{1}", User.login, inSchedule.name));
         }
+
+        #region Create user
+        
         [Test]
         public async Task CreateUser()
         {
@@ -60,10 +65,22 @@ namespace MobileAppAPI.Tests.ApiTests
             Assert.AreEqual(response.password, user.password);
         }
         [Test]
-        public async Task CreateUserNull()
+        public async Task CreateUserAlredyExists()
+        {
+            Users user = new Users()
+            {
+                login = "login",
+                password = "password"
+            };
+            var reqUser = JsonContent.Create(user);
+            var result = await Client.PostAsync("/api/Users/post", reqUser);
+            Assert.AreEqual(result.StatusCode, HttpStatusCode.BadRequest);
+        }
+        [Test]
+        public async Task CreateUserIsNull()
         {
             var test = JsonContent.Create("");
-            var result = await Client.PostAsync("/api/Users/post", test);
+            var result = await Client.PostAsync("/api/Users/post", JsonContent.Create<Users>(new Users()));
             Assert.AreEqual(result.StatusCode, HttpStatusCode.BadRequest);
         }
         #endregion

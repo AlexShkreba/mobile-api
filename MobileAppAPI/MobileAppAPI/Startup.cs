@@ -14,12 +14,10 @@ namespace MobileAppAPI
     {
         public IConfiguration Configuration { get; }
         public LaunchSettings launchSettings { get; }
-        private IWebHostEnvironment Env { get; }
 
         public Startup(IConfiguration configuration, IWebHostEnvironment environment )
         {
             Configuration = configuration;
-            Env = environment;
             launchSettings = configuration.GetSection("LaunchSettings").Get<LaunchSettings>();
         }
 
