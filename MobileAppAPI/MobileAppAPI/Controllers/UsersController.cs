@@ -21,8 +21,11 @@ namespace MobileAppAPI.Controllers
         [HttpPost("post")]
         public async Task<ActionResult> post(Users user)
         {
-            if ((user == null) || (_context.users.Any(x => x.login == user.login)))
+            if (user.login == null)
             {
+                return BadRequest();
+            }
+            if(_context.users.Any(x => x.login == user.login)){
                 return BadRequest();
             }
             _context.users.Add(user);
@@ -37,7 +40,7 @@ namespace MobileAppAPI.Controllers
             return Ok(user);
         }
 
-        [HttpDelete("delete")]
+        [HttpDelete("delete/{login}")]
         public async Task<ActionResult<Users>> DeleteUsers(string login)
         {
             var user = await _context.users.FirstOrDefaultAsync(x => x.login == login);
